@@ -6,9 +6,11 @@ bot = Bot(token='2055868218:AAGsPuMjLoaqE9uh8V_pNgTX5BM2FxccoYc')
 dp = Dispatcher(bot)
 
 # Генератор карт
-decimal_decoder = lambda s: int(s, 10)
-decimal_encoder = lambda i: str(i)
-
+# decimal_decoder = lambda s: int(s, 10)
+# decimal_encoder = lambda i: str(i)
+decimal_decoder = None
+decimal_encoder = None
+new_card = None
 
 class Card_Generator(object):
     @staticmethod
@@ -41,11 +43,16 @@ class Card_Generator(object):
 
 
 def start_generator():
+    global decimal_decoder
+    global decimal_encoder
+    global new_card
+    decimal_decoder = lambda s: int(s, 10)
+    decimal_encoder = lambda i: str(i)
     new_card = Card_Generator.generate_pan()
     return new_card
 
 
-new_card = start_generator()
+# new_card = start_generator()
 
 # Клавиатура бота
 b1 = KeyboardButton('/Сгенерировать_карту')
@@ -72,6 +79,7 @@ async def start(message: types.Message):
 
 @dp.message_handler(commands=['Сгенерировать_карту'])
 async def gen_card(message: types.Message):
+    start_generator()
     await message.delete()
     await message.answer('Сгенерировал карту для оплаты в тестинге ' + new_card)
 
