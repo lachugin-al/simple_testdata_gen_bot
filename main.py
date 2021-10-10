@@ -1,58 +1,12 @@
 from aiogram import types, executor, Dispatcher, Bot
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 import json, string, random
+from cardgen import Card_Generator
 
-bot = Bot(token='2055868218:AAGsPuMjLoaqE9uh8V_pNgTX5BM2FxccoYc')
+# bot = Bot(token='2055868218:AAGsPuMjLoaqE9uh8V_pNgTX5BM2FxccoYc')
+bot = Bot(token='2099135297:AAEJN4KELCd6uWaLvA_wzU0tdGl2CHagSiE')
 dp = Dispatcher(bot)
 
-# Генератор карт
-# decimal_decoder = lambda s: int(s, 10)
-# decimal_encoder = lambda i: str(i)
-decimal_decoder = None
-decimal_encoder = None
-new_card = None
-
-class Card_Generator(object):
-    @staticmethod
-    def luhn_sum_mod_base(s):
-        digits = [int(c) for c in s]
-        b = 10
-        return (sum(digits[::-2]) +
-                sum(sum(divmod(2 * d, b)) for d in digits[-2::-2])) % b
-
-    @staticmethod
-    def verify(s):
-        return Card_Generator.luhn_sum_mod_base(s) == 0
-
-    @staticmethod
-    def generate(s):
-        d = Card_Generator.luhn_sum_mod_base(s + '0')
-        if d != 0:
-            d = 10 - d
-        return str(d)
-
-    @staticmethod
-    def generate_pan(pan_len=16):
-        prefix = '510000'
-        base = prefix + str(random.randint(
-            10 ** (pan_len - len(prefix) - 2),
-            10 ** (pan_len - len(prefix) - 1) - 1))
-        pan = base + Card_Generator.generate(base)
-        assert Card_Generator.verify(pan)
-        return pan
-
-
-def start_generator():
-    global decimal_decoder
-    global decimal_encoder
-    global new_card
-    decimal_decoder = lambda s: int(s, 10)
-    decimal_encoder = lambda i: str(i)
-    new_card = Card_Generator.generate_pan()
-    return new_card
-
-
-# new_card = start_generator()
 
 # Клавиатура бота
 b1 = KeyboardButton('/Сгенерировать_карту')
@@ -79,9 +33,9 @@ async def start(message: types.Message):
 
 @dp.message_handler(commands=['Сгенерировать_карту'])
 async def gen_card(message: types.Message):
-    start_generator()
+    # new_card = start_generator()
     await message.delete()
-    await message.answer('Сгенерировал карту для оплаты в тестинге ' + new_card)
+    await message.answer('Сгенерировал карту для оплаты в тестинге ' + Card_Generator.generate_pan())
 
 
 @dp.message_handler(commands=['Тестовые_CVV'])
@@ -98,10 +52,10 @@ async def help(message: types.Message):
 
 # ----------------------------------------
 # test
-@dp.message_handler()
-async def echo_send(message: types.Message):
-    if message.text.lower() == 'test':
-        await message.answer('passed')
+# @dp.message_handler()
+# async def echo_send(message: types.Message):
+#     if message.text.lower() == 'test':
+#         await message.answer('passed')
 
 
 # Проверка на матерные и запрещенные слова
