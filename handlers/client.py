@@ -1,13 +1,14 @@
 from aiogram import types, Dispatcher
 from create_bot import dp, bot  # импортируем уже созданные экземпляры
-
+from keyboards import kb_client  # импортируем пакет с лавиатурой
 from cardgen import Card_Generator
 
 
 # @dp.message_handler(commands=['start'])
 async def start(message: types.Message):
     try:
-        await bot.send_message(message.from_user.id, 'Привет, я ваш помошник в генерации тестовых данных') # reply_markup=kb_client
+        await bot.send_message(message.from_user.id, 'Привет, я ваш помошник в генерации тестовых данных',
+                               reply_markup=kb_client)  # reply_markup=kb_client
         await message.delete()
     except:
         await message.reply('Общение с ботом через личные сообщения, напишити ему: \nhttps://t.me/SimpleTestDataGenbot')
