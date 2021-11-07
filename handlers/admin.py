@@ -4,6 +4,8 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram import types, Dispatcher
 from create_bot import dp, bot
+from database.sqlite3_db import sql_add_command
+from keyboards import admin_kb # импортируем клавиатуру для админа
 
 ID = None
 
@@ -22,7 +24,7 @@ class FSMAdmin(StatesGroup):
 async def admin_make_changes(message: types.Message):
     global ID
     ID = message.from_user.id
-    await bot.send_message(message.from_user.id, 'Что пожелаете?')
+    await bot.send_message(message.from_user.id, 'Что пожелаете?', reply_markup=admin_kb.kb_admin) # выводим админскую панель если пользоватеь является модератором
     await message.delete()
     # await bot.delete_message()
 
@@ -40,8 +42,8 @@ async def cm_start(message: types.Message):
 
 # Выходим из машины состоний
 # Размещаем после FSMAdmin.photo.set() так как инача не работает отмена, если пройти далее первого шага
-# @dp.message_handler(state='*', commands='отмена')
-# @dp.message_handler(Text(equals='отмена', ignore_case=True), state='*')
+# @dp.message_handler(state='*', commands='Отмена')
+# @dp.message_handler(Text(equals='Отмена', ignore_case=True), state='*')
 async def cancel_handler(message: types.Message, state: FSMContext):
     current_state = await state.get_state()
     if current_state is None:
@@ -83,16 +85,21 @@ async def load_price(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['price'] = float(message.text)
 
+    """
     async with state.proxy() as data:
-        await message.reply(str(data))  # выводим что записал пользователь, либо записываем в базу данных
+        await message.reply(str(data))  # выводим что записал пользователь в телеграм
+    """
+
+    await sql_add_command(state)  # обращаемся к базе данных для записи, await так как функция async
+
     await state.finish()  # бот выходит из машины состояний
 
 
 # записываем команды для передачи хендлеров
 def register_handlers_admin(dp: Dispatcher):
     dp.register_message_handler(cm_start, commands=['Загрузить'], state=None)
-    dp.register_message_handler(cancel_handler, state='*', commands='отмена')
-    dp.register_message_handler(cancel_handler, Text(equals='отмена', ignore_case=True), state='*')
+    dp.register_message_handler(cancel_handler, state='*', commands='Отмена')
+    dp.register_message_handler(cancel_handler, Text(equals='Отмена', ignore_case=True), state='*')
     dp.register_message_handler(load_photo, content_types=['photo'], state=FSMAdmin.photo)
     dp.register_message_handler(load_name, state=FSMAdmin.name)
     dp.register_message_handler(load_description, state=FSMAdmin.description)

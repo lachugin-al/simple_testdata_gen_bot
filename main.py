@@ -1,9 +1,10 @@
 from aiogram import executor
 from create_bot import dp
-
+from database import sqlite3_db
 
 async def on_startup(_):
     print('On-air')
+    sqlite3_db.sql_start()
 
 
 # импортируем handlers
