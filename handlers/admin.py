@@ -4,8 +4,10 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram import types, Dispatcher
 from create_bot import dp, bot
+from database import sqlite3_db
 from database.sqlite3_db import sql_add_command
-from keyboards import admin_kb # импортируем клавиатуру для админа
+from keyboards import admin_kb  # импортируем клавиатуру для админа
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 ID = None
 
@@ -24,7 +26,8 @@ class FSMAdmin(StatesGroup):
 async def admin_make_changes(message: types.Message):
     global ID
     ID = message.from_user.id
-    await bot.send_message(message.from_user.id, 'Что пожелаете?', reply_markup=admin_kb.kb_admin) # выводим админскую панель если пользоватеь является модератором
+    await bot.send_message(message.from_user.id, 'Что пожелаете?',
+                           reply_markup=admin_kb.kb_admin)  # выводим админскую панель если пользоватеь является модератором
     await message.delete()
     # await bot.delete_message()
 
@@ -93,6 +96,24 @@ async def load_price(message: types.Message, state: FSMContext):
     await sql_add_command(state)  # обращаемся к базе данных для записи, await так как функция async
 
     await state.finish()  # бот выходит из машины состояний
+
+
+# добавляем функционал для удаления данных из базы данных дял администратора
+@dp.callback_query_handler(lambda x: x.data and x.data.startswith('del '))
+async def del_callback_run(callback_query: types.CallbackQuery):
+    await sqlite3_db.sql_delete_comand(callback_query.data.replace('del ', ''))
+    # await callback_query.answer(text=f'{callback_query.data.replace("del ", "")} удалена.', show_alert=True)
+    await bot.answer_callback_query(callback_query.id, text=f'{callback_query.data.replace("del ", "")} удалена.', show_alert=True)
+
+@dp.message_handler(commands='удалить')
+async def delete_item(message: types.Message):
+    if message.from_user.id == ID:
+        read_all = sqlite3_db.sql_read_all()
+        for ret in read_all:
+            await bot.send_photo(message.from_user.id, ret[0], f'{ret[1]}\nОписание: {ret[2]}\nЦена {ret[-1]}')
+            await bot.send_message(message.from_user.id, text='^^^', reply_markup=InlineKeyboardMarkup()
+                                   .add(InlineKeyboardButton(f'Удалить {ret[1]}',
+                                                             callback_data=f'del {ret[1]}')))  # в базу возвращаем callback_data=f'del {ret[1]}'
 
 
 # записываем команды для передачи хендлеров
