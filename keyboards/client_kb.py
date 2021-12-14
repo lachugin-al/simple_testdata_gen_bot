@@ -8,5 +8,5 @@ b3 = KeyboardButton('Поделиться номером', request_contact=True)
 b4 = KeyboardButton('Отправить расположение', request_location=True)
 b5 = KeyboardButton('/Показать_сгенерированные_карты')
 
-# kb_client.add(b1).insert(b2)
-kb_client.row(b1, b2).add(b3, b4).row(b5)
+kb_client.add(b1).insert(b2)
+# kb_client.row(b1, b2).add(b3, b4).row(b5)
